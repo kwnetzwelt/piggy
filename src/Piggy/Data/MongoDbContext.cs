@@ -25,19 +25,24 @@ public class MongoDbContext : IMongoDbContext
     public IMongoCollection<Settings> Settings =>
         _database.GetCollection<Settings>("settings");
 
+    public IMongoCollection<TOTPSecret> TOTPSecrets =>
+        _database.GetCollection<TOTPSecret>("totpSecrets");
+
     public async Task<string> ExportAsync()
     {
         var virtualAccounts = await VirtualAccounts.Find(new BsonDocument()).ToListAsync();
         var transactions = await Transactions.Find(new BsonDocument()).ToListAsync();
         var splitTemplates = await SplitTemplates.Find(new BsonDocument()).ToListAsync();
         var settings = await Settings.Find(new BsonDocument()).ToListAsync();
+        var totpSecrets = await TOTPSecrets.Find(new BsonDocument()).ToListAsync();
 
         var doc = new BsonDocument
         {
             ["virtualAccounts"] = new BsonArray(virtualAccounts.Select(v => v.ToBsonDocument())),
             ["transactions"] = new BsonArray(transactions.Select(t => t.ToBsonDocument())),
             ["splitTemplates"] = new BsonArray(splitTemplates.Select(s => s.ToBsonDocument())),
-            ["settings"] = new BsonArray(settings.Select(s => s.ToBsonDocument()))
+            ["settings"] = new BsonArray(settings.Select(s => s.ToBsonDocument())),
+            ["totpSecrets"] = new BsonArray(totpSecrets.Select(s => s.ToBsonDocument()))
         };
 
         return doc.ToJson(new MongoDB.Bson.IO.JsonWriterSettings { Indent = true });
@@ -52,7 +57,8 @@ public class MongoDbContext : IMongoDbContext
             ["virtualAccounts"] = _database.GetCollection<BsonDocument>("virtualAccounts"),
             ["transactions"] = _database.GetCollection<BsonDocument>("transactions"),
             ["splitTemplates"] = _database.GetCollection<BsonDocument>("splitTemplates"),
-            ["settings"] = _database.GetCollection<BsonDocument>("settings")
+            ["settings"] = _database.GetCollection<BsonDocument>("settings"),
+            ["totpSecrets"] = _database.GetCollection<BsonDocument>("totpSecrets")
         };
 
         foreach (var (key, collection) in collections)

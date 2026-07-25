@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.HttpOverrides;
 using MongoDB.Driver;
 using Piggy.Data;
+using Piggy.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -67,6 +68,7 @@ builder.Services.AddScoped<IVirtualAccountRepository, VirtualAccountRepository>(
 builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
 builder.Services.AddScoped<ISplitTemplateRepository, SplitTemplateRepository>();
 builder.Services.AddScoped<ISettingsRepository, SettingsRepository>();
+builder.Services.AddScoped<ITOTPSecretRepository, TOTPSecretRepository>();
 
 var app = builder.Build();
 
@@ -80,6 +82,7 @@ if (!app.Environment.IsDevelopment())
 app.UseStaticFiles();
 app.UseRouting();
 app.UseAuthentication();
+app.UseTwoFactor();
 app.UseAuthorization();
 app.MapRazorPages();
 app.MapMethods("/logout", new[] { "POST", "GET" }, async (HttpContext context) =>

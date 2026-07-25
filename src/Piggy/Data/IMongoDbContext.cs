@@ -10,6 +10,7 @@ public interface IMongoDbContext
     IMongoCollection<Transaction> Transactions { get; }
     IMongoCollection<SplitTemplate> SplitTemplates { get; }
     IMongoCollection<Settings> Settings { get; }
+    IMongoCollection<TOTPSecret> TOTPSecrets { get; }
     Task<string> ExportAsync();
     Task ImportAsync(string json);
 }
