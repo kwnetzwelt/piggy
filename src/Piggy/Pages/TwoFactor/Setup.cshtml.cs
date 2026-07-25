@@ -72,6 +72,11 @@ public class SetupModel : PageModel
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.Identity?.Name ?? "";
         await _totpRepo.DeleteAsync(userId);
+
+        var key = OtpNet.KeyGeneration.GenerateRandomKey(20);
+        Secret = OtpNet.Base32Encoding.ToString(key);
+        var uri = GenerateOtpUri(userId, Secret);
+        QrCodeSvg = GenerateSvg(uri);
         SuccessMessage = "Two-factor authentication has been disabled.";
         return Page();
     }
