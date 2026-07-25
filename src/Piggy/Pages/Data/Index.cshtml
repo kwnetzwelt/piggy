@@ -1,0 +1,49 @@
+@page
+@model Piggy.Pages.Data.IndexModel
+@{
+    ViewData["Title"] = "Data Management";
+}
+
+<h2 class="mb-4">Data Management</h2>
+
+@if (!string.IsNullOrEmpty(Model.SuccessMessage))
+{
+    <div class="alert alert-success">@Model.SuccessMessage</div>
+}
+
+@if (!string.IsNullOrEmpty(Model.ErrorMessage))
+{
+    <div class="alert alert-danger">@Model.ErrorMessage</div>
+}
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Export</h5>
+                <p class="card-text">Download all data (accounts, transactions, split templates, settings) as JSON.</p>
+                <form method="post" asp-page-handler="Export">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-download"></i> Export
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Import</h5>
+                <p class="card-text">Replace all data with a previously exported JSON file.</p>
+                <form method="post" asp-page-handler="Import" enctype="multipart/form-data" onsubmit="return confirm('This will replace all existing data. Are you sure?')">
+                    <div class="mb-3">
+                        <input type="file" name="importFile" class="form-control" accept=".json" required />
+                    </div>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="bi bi-upload"></i> Import
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

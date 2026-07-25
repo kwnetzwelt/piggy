@@ -1,3 +1,4 @@
+using MongoDB.Bson;
 using MongoDB.Driver;
 using Piggy.Models;
 
@@ -9,4 +10,6 @@ public interface IMongoDbContext
     IMongoCollection<Transaction> Transactions { get; }
     IMongoCollection<SplitTemplate> SplitTemplates { get; }
     IMongoCollection<Settings> Settings { get; }
+    Task<string> ExportAsync();
+    Task ImportAsync(string json);
 }

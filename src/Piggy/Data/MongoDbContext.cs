@@ -1,3 +1,4 @@
+using MongoDB.Bson;
 using MongoDB.Driver;
 using Piggy.Models;
 
@@ -23,4 +24,46 @@ public class MongoDbContext : IMongoDbContext
 
     public IMongoCollection<Settings> Settings =>
         _database.GetCollection<Settings>("settings");
+
+    public async Task<string> ExportAsync()
+    {
+        var virtualAccounts = await VirtualAccounts.Find(new BsonDocument()).ToListAsync();
+        var transactions = await Transactions.Find(new BsonDocument()).ToListAsync();
+        var splitTemplates = await SplitTemplates.Find(new BsonDocument()).ToListAsync();
+        var settings = await Settings.Find(new BsonDocument()).ToListAsync();
+
+        var doc = new BsonDocument
+        {
+            ["virtualAccounts"] = new BsonArray(virtualAccounts.Select(v => v.ToBsonDocument())),
+            ["transactions"] = new BsonArray(transactions.Select(t => t.ToBsonDocument())),
+            ["splitTemplates"] = new BsonArray(splitTemplates.Select(s => s.ToBsonDocument())),
+            ["settings"] = new BsonArray(settings.Select(s => s.ToBsonDocument()))
+        };
+
+        return doc.ToJson(new MongoDB.Bson.IO.JsonWriterSettings { Indent = true });
+    }
+
+    public async Task ImportAsync(string json)
+    {
+        var doc = MongoDB.Bson.Serialization.BsonSerializer.Deserialize<BsonDocument>(json);
+
+        var collections = new Dictionary<string, IMongoCollection<BsonDocument>>
+        {
+            ["virtualAccounts"] = _database.GetCollection<BsonDocument>("virtualAccounts"),
+            ["transactions"] = _database.GetCollection<BsonDocument>("transactions"),
+            ["splitTemplates"] = _database.GetCollection<BsonDocument>("splitTemplates"),
+            ["settings"] = _database.GetCollection<BsonDocument>("settings")
+        };
+
+        foreach (var (key, collection) in collections)
+        {
+            _database.DropCollection(key);
+            if (doc.TryGetValue(key, out var value) && value.IsBsonArray)
+            {
+                var documents = value.AsBsonArray.Select(v => v.AsBsonDocument).ToList();
+                if (documents.Count > 0)
+                    await collection.InsertManyAsync(documents);
+            }
+        }
+    }
 }
