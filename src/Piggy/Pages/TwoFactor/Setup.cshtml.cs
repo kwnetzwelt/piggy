@@ -25,13 +25,7 @@ public class SetupModel : PageModel
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.Identity?.Name ?? "";
         var existing = await _totpRepo.GetByUserIdAsync(userId);
-        if (existing != null)
-        {
-            var uri = GenerateOtpUri(userId, existing.Secret);
-            QrCodeSvg = GenerateSvg(uri);
-            Secret = existing.Secret;
-        }
-        else
+        if (existing == null)
         {
             var key = OtpNet.KeyGeneration.GenerateRandomKey(20);
             Secret = OtpNet.Base32Encoding.ToString(key);
