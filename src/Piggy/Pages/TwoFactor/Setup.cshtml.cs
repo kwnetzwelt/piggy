@@ -21,8 +21,11 @@ public class SetupModel : PageModel
     public string? ErrorMessage { get; set; }
     public string? SuccessMessage { get; set; }
 
-    public async Task OnGetAsync()
+    public async Task OnGetAsync(bool? disabled)
     {
+        if (disabled == true)
+            SuccessMessage = "Two-factor authentication has been disabled.";
+
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.Identity?.Name ?? "";
         var existing = await _totpRepo.GetByUserIdAsync(userId);
         if (existing == null)
@@ -72,13 +75,7 @@ public class SetupModel : PageModel
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.Identity?.Name ?? "";
         await _totpRepo.DeleteAsync(userId);
-
-        var key = OtpNet.KeyGeneration.GenerateRandomKey(20);
-        Secret = OtpNet.Base32Encoding.ToString(key);
-        var uri = GenerateOtpUri(userId, Secret);
-        QrCodeSvg = GenerateSvg(uri);
-        SuccessMessage = "Two-factor authentication has been disabled.";
-        return Page();
+        return RedirectToPage("Setup", new { disabled = true });
     }
 
     private static string GenerateOtpUri(string userId, string secret)
