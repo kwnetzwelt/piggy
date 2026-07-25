@@ -1,0 +1,157 @@
+@page
+@model Piggy.Pages.Transactions.TagModel
+@{
+    ViewData["Title"] = "Tag Transactions";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        @if (!string.IsNullOrEmpty(Model.LastAction))
+        {
+            var actionParts = Model.LastAction.Split(':');
+            var isSplit = actionParts[0] == "split";
+            <div class="alert alert-success d-flex align-items-center justify-content-between mb-3" role="alert">
+                <span>
+                    <i class="bi bi-check-circle me-2"></i>
+                    @if (isSplit) { <text>Transaction split</text> } else { <text>Transaction tagged</text> }
+                </span>
+                <form method="post" asp-page-handler="Undo" class="d-inline">
+                    <input type="hidden" name="undoAction" value="@Model.LastAction" />
+                    <input type="hidden" name="skipped" value="@Model.Skipped" />
+                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                        <i class="bi bi-arrow-counterclockwise"></i> Undo
+                    </button>
+                </form>
+            </div>
+        }
+
+        @if (Model.CurrentTransaction == null)
+        {
+            <div class="text-center mt-5">
+                <h2 class="text-success">All done!</h2>
+                <p class="text-muted mt-3">No untagged transactions left.</p>
+                <a asp-page="/Transactions/Index" asp-route-Filter="untagged" class="btn btn-primary mt-3">View All Untagged</a>
+                <a asp-page="/Index" class="btn btn-outline-secondary mt-3 ms-2">Dashboard</a>
+                @if (!string.IsNullOrEmpty(Model.Skipped))
+                {
+                    <a asp-page="/Transactions/Tag" class="btn btn-outline-warning mt-3 ms-2">Review Skipped</a>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="text-center mb-4">
+                <span class="badge bg-secondary">@Model.CurrentIndex of @Model.TotalCount untagged</span>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-body p-4">
+                    <div class="row mb-3">
+                        <div class="col-sm-3 text-muted">Date</div>
+                        <div class="col-sm-9 fw-bold">@Model.CurrentTransaction.Date.ToString("dddd, d MMMM yyyy")</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-3 text-muted">Description</div>
+                        <div class="col-sm-9 fw-bold fs-5">@Model.CurrentTransaction.Description</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-3 text-muted">Amount</div>
+                        <div class="col-sm-9 fw-bold fs-5 @(Model.CurrentTransaction.Amount >= 0 ? "text-success" : "text-danger")">
+                            @Model.CurrentTransaction.Amount.ToString("N2") EUR
+                        </div>
+                    </div>
+                    @if (Model.CurrentTransaction.SplitFrom != null && Model.CurrentTransaction.IsOverflow)
+                    {
+                        <div class="row mb-3">
+                            <div class="col-sm-3 text-muted">Type</div>
+                            <div class="col-sm-9">
+                                <span class="badge bg-info">Overflow</span>
+                                <span class="text-muted ms-2">from split of @Model.CurrentTransaction.SplitFrom</span>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <h6 class="text-muted text-center mb-2">Tag to account</h6>
+                <form method="post" id="tagForm">
+                    <input type="hidden" name="transactionId" value="@Model.CurrentTransaction.ExternalId" />
+                    <input type="hidden" name="Skipped" value="@Model.Skipped" />
+
+                    <div class="d-flex flex-wrap gap-2 justify-content-center mb-2">
+                        @foreach (var account in Model.TopAccounts)
+                        {
+                            <button type="submit" asp-page-handler="Pick"
+                                class="btn btn-lg px-3 py-2 text-white fw-semibold"
+                                style="background-color:@(account.Color);border-color:@(account.Color)"
+                                name="accountId" value="@account.Id">
+                                @account.Name
+                            </button>
+                        }
+                    </div>
+
+                    <div id="moreAccounts" style="display:none;flex-wrap:wrap;gap:0.5rem;justify-content:center;margin-bottom:1rem">
+                        @foreach (var account in Model.OtherAccounts)
+                        {
+                            <button type="submit" asp-page-handler="Pick"
+                                class="btn btn-lg px-3 py-2 text-white fw-semibold"
+                                style="background-color:@(account.Color);border-color:@(account.Color)"
+                                name="accountId" value="@account.Id">
+                                @account.Name
+                            </button>
+                        }
+                    </div>
+
+                    @if (Model.OtherAccounts.Any())
+                    {
+                        <div class="text-center mb-3">
+                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleMore()">
+                                <i class="bi bi-three-dots"></i> More
+                            </button>
+                        </div>
+                    }
+                </form>
+
+                @if (Model.SplitTemplates.Any())
+                {
+                    <hr class="my-3" />
+                    <h6 class="text-muted text-center mb-2">Or split</h6>
+                    <div class="d-flex flex-wrap gap-2 justify-content-center">
+                        @foreach (var template in Model.SplitTemplates)
+                        {
+                            <form method="post" asp-page-handler="Split" class="d-inline">
+                                <input type="hidden" name="transactionId" value="@Model.CurrentTransaction.ExternalId" />
+                                <input type="hidden" name="templateId" value="@template.Id" />
+                                <input type="hidden" name="Skipped" value="@Model.Skipped" />
+                                <button type="submit" class="btn btn-lg px-3 py-2 btn-outline-warning fw-semibold">
+                                    <i class="bi bi-split"></i> @template.Name
+                                </button>
+                            </form>
+                        }
+                    </div>
+                }
+
+                <hr class="my-3" />
+                <div class="text-center">
+                    <form method="post" asp-page-handler="Skip" class="d-inline">
+                        <input type="hidden" name="transactionId" value="@Model.CurrentTransaction.ExternalId" />
+                        <input type="hidden" name="Skipped" value="@Model.Skipped" />
+                        <button type="submit" class="btn btn-outline-secondary px-4">
+                            Skip
+                        </button>
+                    </form>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function toggleMore() {
+            var el = document.getElementById('moreAccounts');
+            el.style.display = el.style.display === 'none' ? 'flex' : 'none';
+        }
+    </script>
+}

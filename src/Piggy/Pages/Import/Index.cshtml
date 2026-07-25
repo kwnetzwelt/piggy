@@ -1,0 +1,61 @@
+@page
+@model Piggy.Pages.Import.IndexModel
+@{
+    ViewData["Title"] = "Import Transactions";
+}
+
+<h2 class="mb-4">Import Transactions</h2>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Upload CSV Export</h5>
+                <p class="card-text">
+                    Export your transactions from your bank as CSV, then upload the file here.
+                </p>
+
+                @if (Model.Result != null)
+                {
+                    <div class="alert @(Model.Result.Success ? "alert-success" : "alert-danger")">
+                        @Model.Result.Message
+                    </div>
+                }
+
+                <form method="post" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="csvFile" class="form-label">Select CSV file</label>
+                        <input type="file" name="csvFile" id="csvFile" class="form-control" accept=".csv" required />
+                    </div>
+                    <div class="mb-3">
+                        <label for="virtualAccountId" class="form-label">Assign to Space (optional)</label>
+                        <select name="virtualAccountId" id="virtualAccountId" class="form-select">
+                            <option value="">-- No Space (Main Account) --</option>
+                            @foreach (var account in Model.Accounts)
+                            {
+                                <option value="@account.Id">@account.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-upload"></i> Import Transactions
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">How to export from your bank</h5>
+                <ol>
+                    <li>Log in to your bank's web app</li>
+                    <li>Find the transaction export feature, usually under "Downloads" or "Account Activity"</li>
+                    <li>Select your date range</li>
+                    <li>Download as CSV</li>
+                    <li>Upload the file above</li>
+                    <li>Go to <a asp-page="/Transactions/Index">Transactions</a> to tag them</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>

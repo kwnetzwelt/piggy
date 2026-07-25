@@ -1,0 +1,85 @@
+@page
+@model Piggy.Pages.Splits.IndexModel
+@{
+    ViewData["Title"] = "Split Templates";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Split Templates</h2>
+    <a asp-page="Create" class="btn btn-primary">
+        <i class="bi bi-plus"></i> New Template
+    </a>
+</div>
+
+@if (!Model.Templates.Any())
+{
+    <div class="alert alert-info">
+        No split templates yet. Create one to start splitting transactions!
+    </div>
+}
+else
+{
+    <div class="row">
+        @foreach (var template in Model.Templates)
+        {
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">@template.Name</h5>
+                        <div>
+                            <a asp-page="Edit" asp-route-id="@template.Id" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <form method="post" asp-page-handler="Delete" class="d-inline">
+                                <input type="hidden" name="id" value="@template.Id" />
+                                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this template?')">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-sm mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Account</th>
+                                    <th class="text-end">Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in template.Items.OrderByDescending(i => i.Amount))
+                                {
+                                    var account = Model.AccountLookup.GetValueOrDefault(item.VirtualAccountId);
+                                    <tr>
+                                        <td>
+                                            @if (account != null)
+                                            {
+                                                <span class="d-inline-block rounded-circle me-1" style="width:8px;height:8px;background-color:@(account.Color)"></span>
+                                                @account.Name
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">Unknown</span>
+                                            }
+                                        </td>
+                                        <td class="text-end @(item.Amount >= 0 ? "amount-positive" : "amount-negative")">
+                                            @item.Amount.ToString("N2") EUR
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                            <tfoot>
+                                <tr class="table-active">
+                                    <td><strong>Total</strong></td>
+                                    <td class="text-end fw-bold">
+                                        @template.Items.Sum(i => i.Amount).ToString("N2") EUR
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

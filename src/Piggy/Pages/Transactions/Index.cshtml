@@ -1,0 +1,266 @@
+@page
+@model Piggy.Pages.Transactions.IndexModel
+@{
+    ViewData["Title"] = "Transactions";
+}
+
+<h2 class="mb-4">Transactions</h2>
+
+<div class="row mb-3">
+    <div class="col-md-6">
+        <a asp-page="Create" asp-route-Month="@Model.Month" class="btn btn-success btn-sm">
+            <i class="bi bi-plus"></i> Add Transaction
+        </a>
+        <a asp-page="Index" class="btn @(Model.Filter == null ? "btn-primary" : "btn-outline-primary") btn-sm">All</a>
+        <a asp-page="Index" asp-route-Filter="untagged" asp-route-Month="@Model.Month" class="btn @(Model.Filter == "untagged" ? "btn-warning" : "btn-outline-warning") btn-sm">Untagged</a>
+        <a asp-page="Index" asp-route-Filter="tagged" asp-route-Month="@Model.Month" class="btn @(Model.Filter == "tagged" ? "btn-success" : "btn-outline-success") btn-sm">Tagged</a>
+    </div>
+    <div class="col-md-6 text-end">
+        <div class="btn-group btn-group-sm">
+            <a asp-page="Index" asp-route-Filter="@Model.Filter" asp-route-Month="" class="btn @(string.IsNullOrEmpty(Model.Month) ? "btn-secondary" : "btn-outline-secondary")">All Months</a>
+            @foreach (var month in Model.AvailableMonths.Take(6))
+            {
+                <a asp-page="Index" asp-route-Filter="@Model.Filter" asp-route-Month="@month" class="btn @(Model.Month == month ? "btn-secondary" : "btn-outline-secondary")">
+                    @DateTime.ParseExact(month + "-01", "yyyy-MM-dd", null).ToString("MMM yyyy")
+                </a>
+            }
+        </div>
+    </div>
+</div>
+
+@if (!Model.Transactions.Any())
+{
+    <div class="alert alert-info">
+        No transactions found. <a asp-page="/Import/Index">Import CSV</a>.
+    </div>
+}
+else
+{
+    @foreach (var group in Model.MonthGroups)
+    {
+        <h5 class="mt-4 mb-3 text-muted">@group.Month</h5>
+        <div id="bulkActions" style="display:none" class="mb-2">
+            <button type="button" class="btn btn-danger btn-sm" onclick="submitBulkDelete()">
+                <i class="bi bi-trash"></i> Delete Selected (<span id="selectedCount">0</span>)
+            </button>
+        </div>
+
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th style="width:30px"><input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)" /></th>
+                    <th style="width:100px">Date</th>
+                    <th>Description</th>
+                    <th style="width:110px">Amount</th>
+                    <th style="width:160px">Virtual Account</th>
+                    <th style="width:100px">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var tx in group.Transactions)
+                {
+                    var isSuggested = Model.Suggestions.ContainsKey(tx.ExternalId);
+                    var account = tx.VirtualAccountId != null ? Model.Accounts.FirstOrDefault(a => a.Id == tx.VirtualAccountId) : null;
+                    var isSplit = tx.SplitFrom != null;
+                    var isChild = tx.SplitFrom != null && tx.SplitFrom != tx.ExternalId;
+                    <tr class="@(tx.VirtualAccountId == null ? "table-warning" : "") @(isSplit ? "text-muted" : "") @(isChild ? "table-light" : "")">
+                        <td><input type="checkbox" name="txCheck" value="@tx.ExternalId" onchange="updateBulkActions()" /></td>
+                        <td style="@(account != null ? $"border-left: 3px solid {account.Color}" : "")">
+                            @if (isChild)
+                            {
+                                <span class="text-muted me-1">└</span>
+                            }
+                            @tx.Date.ToString("d")
+                        </td>
+                        <td style="word-wrap:break-word; white-space:normal">
+                            @tx.Description
+                            @if (isSuggested)
+                            {
+                                <span class="badge bg-info ms-2" title="Suggested from history">suggested</span>
+                            }
+                            @if (isChild)
+                            {
+                                <span class="badge bg-light text-dark ms-2 border">split child</span>
+                            }
+                            else if (isSplit)
+                            {
+                                <span class="badge bg-secondary ms-2">split</span>
+                            }
+                            @if (tx.IsOverflow)
+                            {
+                                <span class="badge bg-info ms-2">overflow</span>
+                            }
+                        </td>
+                        <td class="text-nowrap text-end @(tx.Amount >= 0 ? "amount-positive" : "amount-negative")">
+                            @tx.Amount.ToString("N2") EUR
+                        </td>
+                        <td style="@(account != null && !isSplit ? $"background-color: {account.Color}10" : "")">
+                            @if (isSplit && !isChild)
+                            {
+                                <span class="text-muted">Split</span>
+                            }
+                            else
+                            {
+                                <form method="post" asp-page-handler="Tag" class="d-flex">
+                                    <input type="hidden" name="transactionId" value="@tx.ExternalId" />
+                                    <input type="hidden" name="Filter" value="@Model.Filter" />
+                                    <input type="hidden" name="SpaceFilter" value="@Model.SpaceFilter" />
+                                    <input type="hidden" name="Month" value="@Model.Month" />
+                                    <input type="hidden" name="PageNumber" value="@Model.CurrentPage" />
+                                    <select name="virtualAccountId" class="form-select form-select-sm" onchange="this.form.submit()" style="@(account != null ? $"background-color: {account.Color}20; border-color: {account.Color}" : "")">
+                                        <option value="">-- Select --</option>
+                                        @foreach (var acc in Model.Accounts)
+                                        {
+                                            var isSelected = tx.VirtualAccountId == acc.Id || (isSuggested && Model.Suggestions[tx.ExternalId] == acc.Id && tx.VirtualAccountId == null);
+                                            <option value="@acc.Id" selected="@(isSelected)">
+                                                @acc.Name
+                                            </option>
+                                        }
+                                    </select>
+                                    @if (isSuggested && tx.VirtualAccountId == null)
+                                    {
+                                        <button type="submit" class="btn btn-sm btn-outline-success ms-1" title="Apply suggestion">✓</button>
+                                    }
+                                </form>
+                            }
+                        </td>
+                        <td class="text-nowrap">
+                            <a asp-page="Edit" asp-route-id="@tx.ExternalId" asp-route-Month="@Model.Month" class="btn btn-sm btn-outline-primary" title="Edit">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            @if (!isSplit && Model.SplitTemplates.Any())
+                            {
+                                <div class="dropdown d-inline-block">
+                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                        <i class="bi bi-split"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        @foreach (var template in Model.SplitTemplates)
+                                        {
+                                            <li>
+                                                <button type="button" class="dropdown-item" onclick="confirmSplit('@tx.ExternalId', '@template.Id', '@template.Name')">
+                                                    @template.Name
+                                                </button>
+                                            </li>
+                                        }
+                                    </ul>
+                                </div>
+                            }
+                            <form method="post" asp-page-handler="Delete" class="d-inline" onsubmit="return confirm('Delete this transaction?')">
+                                <input type="hidden" name="transactionId" value="@tx.ExternalId" />
+                                <input type="hidden" name="Filter" value="@Model.Filter" />
+                                <input type="hidden" name="Month" value="@Model.Month" />
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+
+    @if (Model.TotalPages > 1)
+    {
+        <nav class="mt-4">
+            <ul class="pagination justify-content-center">
+                <li class="page-item @(Model.CurrentPage <= 1 ? "disabled" : "")">
+                    <a class="page-link" asp-page="Index" asp-route-Filter="@Model.Filter" asp-route-Month="@Model.Month" asp-route-PageNumber="@(Model.CurrentPage - 1)">Previous</a>
+                </li>
+                @for (int i = 1; i <= Model.TotalPages; i++)
+                {
+                    <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                        <a class="page-link" asp-page="Index" asp-route-Filter="@Model.Filter" asp-route-Month="@Model.Month" asp-route-PageNumber="@i">@i</a>
+                    </li>
+                }
+                <li class="page-item @(Model.CurrentPage >= Model.TotalPages ? "disabled" : "")">
+                    <a class="page-link" asp-page="Index" asp-route-Filter="@Model.Filter" asp-route-Month="@Model.Month" asp-route-PageNumber="@(Model.CurrentPage + 1)">Next</a>
+                </li>
+            </ul>
+        </nav>
+        <p class="text-center text-muted">Page @Model.CurrentPage of @Model.TotalPages (@Model.TotalCount total)</p>
+    }
+}
+
+<div class="modal fade" id="splitModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Split</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Split this transaction using <strong id="splitTemplateName"></strong>?</p>
+                <p class="text-muted small">The original transaction will be marked as split and replaced by individual transactions for each item.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="post" asp-page-handler="Split" id="splitForm" class="d-inline">
+                    <input type="hidden" name="transactionId" id="splitTransactionId" />
+                    <input type="hidden" name="templateId" id="splitTemplateId" />
+                    <input type="hidden" name="Filter" value="@Model.Filter" />
+                    <input type="hidden" name="SpaceFilter" value="@Model.SpaceFilter" />
+                    <input type="hidden" name="Month" value="@Model.Month" />
+                    <input type="hidden" name="Page" value="@Model.CurrentPage" />
+                    <button type="submit" class="btn btn-warning">Split</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function confirmSplit(txId, templateId, templateName) {
+            document.getElementById('splitTransactionId').value = txId;
+            document.getElementById('splitTemplateId').value = templateId;
+            document.getElementById('splitTemplateName').textContent = templateName;
+            new bootstrap.Modal(document.getElementById('splitModal')).show();
+        }
+
+        function toggleSelectAll(checkbox) {
+            document.querySelectorAll('input[name="txCheck"]').forEach(cb => cb.checked = checkbox.checked);
+            updateBulkActions();
+        }
+
+        function updateBulkActions() {
+            var checked = document.querySelectorAll('input[name="txCheck"]:checked');
+            var count = checked.length;
+            document.getElementById('selectedCount').textContent = count;
+            document.getElementById('bulkActions').style.display = count > 0 ? 'block' : 'none';
+            document.getElementById('selectAll').checked = count > 0 && count === document.querySelectorAll('input[name="txCheck"]').length;
+        }
+
+        function submitBulkDelete() {
+            if (!confirm('Delete selected transactions?')) return;
+            var checked = document.querySelectorAll('input[name="txCheck"]:checked');
+            var ids = Array.from(checked).map(cb => cb.value).join(',');
+            var form = document.createElement('form');
+            form.method = 'post';
+            form.action = '?handler=BulkDelete';
+            var fields = {
+                'transactionIds': ids,
+                'Filter': '@Model.Filter',
+                'Month': '@Model.Month'
+            };
+            for (var key in fields) {
+                var input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = key;
+                input.value = fields[key];
+                form.appendChild(input);
+            }
+            var token = document.querySelector('input[name="__RequestVerificationToken"]');
+            if (token) {
+                var clone = document.createElement('input');
+                clone.type = 'hidden';
+                clone.name = '__RequestVerificationToken';
+                clone.value = token.value;
+                form.appendChild(clone);
+            }
+            document.body.appendChild(form);
+            form.submit();
+        }
+    </script>
+}

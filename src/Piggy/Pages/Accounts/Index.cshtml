@@ -1,0 +1,58 @@
+@page
+@model Piggy.Pages.Accounts.IndexModel
+@{
+    ViewData["Title"] = "Virtual Accounts";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Virtual Accounts</h2>
+    <a asp-page="Create" class="btn btn-primary">
+        <i class="bi bi-plus"></i> New Account
+    </a>
+</div>
+
+@if (!Model.Accounts.Any())
+{
+    <div class="alert alert-info">
+        No virtual accounts yet. Create your first one to start tracking!
+    </div>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Starting Balance</th>
+                <th>Current Balance</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.Accounts)
+            {
+                <tr>
+                    <td>
+                        <span class="d-inline-block rounded-circle me-2" style="width:12px;height:12px;background-color:@(item.Account.Color)"></span>
+                        <strong>@item.Account.Name</strong>
+                    </td>
+                    <td>@item.Account.StartingBalance.ToString("N2") EUR</td>
+                    <td class="@(item.CurrentBalance >= 0 ? "amount-positive" : "amount-negative")">
+                        @item.CurrentBalance.ToString("N2") EUR
+                    </td>
+                    <td>
+                        <a asp-page="Edit" asp-route-id="@item.Account.Id" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <form method="post" asp-page-handler="Delete" class="d-inline">
+                            <input type="hidden" name="id" value="@item.Account.Id" />
+                            <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this account?')">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

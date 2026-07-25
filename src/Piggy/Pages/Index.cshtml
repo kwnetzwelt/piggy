@@ -1,0 +1,98 @@
+@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title text-muted">Total Transactions</h5>
+                <h2>@Model.TotalTransactions</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <a asp-page="/Transactions/Tag" class="text-decoration-none">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title text-muted">Untagged</h5>
+                    <h2 class="@(Model.UntaggedCount > 0 ? "text-warning" : "")">@Model.UntaggedCount</h2>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+
+<h3 class="mb-3 d-flex justify-content-between align-items-center">
+    Virtual Accounts
+    <span class="fs-5 fw-normal @(Model.TotalBalance >= 0 ? "text-success" : "text-danger")">
+        @Model.TotalBalance.ToString("N2") EUR
+        @if (Model.NegativeBalance < 0)
+        {
+            <span class="text-danger ms-2">(@Model.NegativeBalance.ToString("N2") EUR)</span>
+        }
+    </span>
+</h3>
+<div class="row mb-4">
+    @if (!Model.Accounts.Any())
+    {
+        <div class="col-12">
+            <div class="alert alert-info">
+                No virtual accounts yet. <a asp-page="/Accounts/Create">Create one</a>.
+            </div>
+        </div>
+    }
+    @foreach (var item in Model.Accounts)
+    {
+        <div class="col-md-4 mb-3">
+            <div class="card summary-card" style="border-left-color:@(item.Account.Color)">
+                <div class="card-body">
+                    <h6 class="card-title">
+                        <span class="d-inline-block rounded-circle me-1" style="width:10px;height:10px;background-color:@(item.Account.Color)"></span>
+                        @item.Account.Name
+                    </h6>
+                    <h4 class="@(item.CurrentBalance >= 0 ? "amount-positive" : "amount-negative")">
+                        @item.CurrentBalance.ToString("N2") EUR
+                    </h4>
+                    <small class="text-muted">Starting: @item.Account.StartingBalance.ToString("N2") EUR</small>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<h3 class="mb-3">Recent Transactions</h3>
+@if (!Model.RecentTransactions.Any())
+{
+    <div class="alert alert-info">
+        No transactions yet. <a asp-page="/Import/Index">Import transactions</a>.
+    </div>
+}
+else
+{
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Description</th>
+                <th>Amount</th>
+                <th>Space</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var tx in Model.RecentTransactions)
+            {
+                <tr>
+                    <td>@tx.Date.ToString("d")</td>
+                    <td>@tx.Description</td>
+                    <td class="@(tx.Amount >= 0 ? "amount-positive" : "amount-negative")">
+                        @tx.Amount.ToString("N2") EUR
+                    </td>
+                    <td>@(tx.SpaceName ?? "Main")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

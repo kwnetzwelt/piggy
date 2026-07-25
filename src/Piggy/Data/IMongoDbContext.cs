@@ -1,0 +1,12 @@
+using MongoDB.Driver;
+using Piggy.Models;
+
+namespace Piggy.Data;
+
+public interface IMongoDbContext
+{
+    IMongoCollection<VirtualAccount> VirtualAccounts { get; }
+    IMongoCollection<Transaction> Transactions { get; }
+    IMongoCollection<SplitTemplate> SplitTemplates { get; }
+    IMongoCollection<Settings> Settings { get; }
+}
