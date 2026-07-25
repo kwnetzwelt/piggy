@@ -21,6 +21,9 @@ public class TOTPSecretRepository : ITOTPSecretRepository
 
     public async Task CreateOrUpdateAsync(TOTPSecret secret)
     {
+        if (string.IsNullOrEmpty(secret.Id))
+            secret.Id = MongoDB.Bson.ObjectId.GenerateNewId().ToString();
+
         await _context.TOTPSecrets.ReplaceOneAsync(
             s => s.UserId == secret.UserId,
             secret,
