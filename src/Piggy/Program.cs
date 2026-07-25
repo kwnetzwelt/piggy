@@ -38,8 +38,11 @@ builder.Services.AddAuthentication(options =>
     {
         OnRedirectToIdentityProvider = context =>
         {
-            context.ProtocolMessage.RedirectUri = context.ProtocolMessage.RedirectUri
-                .Replace("http://", "https://");
+            if (context.Request.Scheme == "https")
+            {
+                context.ProtocolMessage.RedirectUri = context.ProtocolMessage.RedirectUri
+                    .Replace("http://", "https://");
+            }
             return Task.CompletedTask;
         }
     };
