@@ -62,7 +62,15 @@
 
     <footer class="container mt-4 mb-4">
         <hr />
-        <p class="text-muted text-center">Piggy - Virtual Account Manager</p>
+        <p class="text-muted text-center mb-1">Piggy - Virtual Account Manager</p>
+        @{
+            var versionFile = System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "version.txt");
+            var version = System.IO.File.Exists(versionFile) ? System.IO.File.ReadAllText(versionFile).Trim() : null;
+        }
+        @if (version != null)
+        {
+            <p class="text-muted text-center small mb-0">@version</p>
+        }
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

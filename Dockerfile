@@ -8,8 +8,10 @@ RUN dotnet publish src/Piggy/Piggy.csproj -c Release -o /app/publish
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:10.0-preview
+ARG BUILD_TAG
 WORKDIR /app
 COPY --from=build /app/publish .
+RUN test -n "$BUILD_TAG" && echo "$BUILD_TAG" > /app/version.txt || true
 ENV ASPNETCORE_URLS=http://+:8080
 EXPOSE 8080
 ENTRYPOINT ["dotnet", "Piggy.dll"]
