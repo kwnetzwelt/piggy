@@ -9,4 +9,5 @@ public interface IVirtualAccountRepository
     Task CreateAsync(VirtualAccount account);
     Task UpdateAsync(VirtualAccount account);
     Task DeleteAsync(string id);
+    Task<long> CountByGroupAsync(string groupId);
 }

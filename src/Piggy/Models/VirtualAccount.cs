@@ -22,6 +22,10 @@ public class VirtualAccount
     [BsonIgnoreIfNull]
     public List<string>? MatchStrings { get; set; }
 
+    [BsonElement("groupId")]
+    [BsonIgnoreIfNull]
+    public string? GroupId { get; set; }
+
     [BsonElement("createdAt")]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
