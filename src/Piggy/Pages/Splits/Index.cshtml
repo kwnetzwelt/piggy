@@ -11,6 +11,35 @@
     </a>
 </div>
 
+@if (!string.IsNullOrEmpty(Model.SuccessMessage))
+{
+    <div class="alert alert-success">@Model.SuccessMessage</div>
+}
+
+<div class="card mb-4">
+    <div class="card-body">
+        <h5 class="card-title">Overflow Account</h5>
+        <p class="text-muted small mb-3">When a split template's total exceeds the transaction amount, the overflow difference is assigned to this account.</p>
+
+        <form method="post" asp-page-handler="Overflow">
+            <div class="row g-2 align-items-end">
+                <div class="col-md-8">
+                    <select asp-for="OverflowAccountId" class="form-select">
+                        <option value="">-- None --</option>
+                        @foreach (var account in Model.Accounts)
+                        {
+                            <option value="@account.Id">@account.Name (@account.StartingBalance.ToString("N2") EUR)</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
 @if (!Model.Templates.Any())
 {
     <div class="alert alert-info">
