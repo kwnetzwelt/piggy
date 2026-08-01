@@ -9,13 +9,16 @@ public class IndexModelTests
 {
     private readonly Mock<IVirtualAccountRepository> _mockAccountRepo;
     private readonly Mock<ITransactionRepository> _mockTransactionRepo;
+    private readonly Mock<IAccountGroupRepository> _mockGroupRepo;
     private readonly IndexModel _model;
 
     public IndexModelTests()
     {
         _mockAccountRepo = new Mock<IVirtualAccountRepository>();
         _mockTransactionRepo = new Mock<ITransactionRepository>();
-        _model = new IndexModel(_mockAccountRepo.Object, _mockTransactionRepo.Object);
+        _mockGroupRepo = new Mock<IAccountGroupRepository>();
+        _mockGroupRepo.Setup(r => r.GetAllAsync()).ReturnsAsync(new List<AccountGroup>());
+        _model = new IndexModel(_mockAccountRepo.Object, _mockTransactionRepo.Object, _mockGroupRepo.Object);
     }
 
     [Fact]
@@ -143,5 +146,56 @@ public class IndexModelTests
         Assert.Empty(_model.RecentTransactions);
         Assert.Equal(0, _model.TotalTransactions);
         Assert.Equal(0, _model.UntaggedCount);
+    }
+
+    [Fact]
+    public async Task OnGetAsync_CalculatesGroupTotals()
+    {
+        var accounts = new List<VirtualAccount>
+        {
+            new() { Id = "1", Name = "Savings A", GroupId = "g1", StartingBalance = 100m },
+            new() { Id = "2", Name = "Savings B", GroupId = "g1", StartingBalance = 50m },
+            new() { Id = "3", Name = "Monthly", GroupId = "g2", StartingBalance = 200m },
+            new() { Id = "4", Name = "Unassigned", StartingBalance = 10m }
+        };
+        var groups = new List<AccountGroup>
+        {
+            new() { Id = "g1", Name = "Savings" },
+            new() { Id = "g2", Name = "Monthly" }
+        };
+
+        _mockAccountRepo.Setup(r => r.GetAllAsync()).ReturnsAsync(accounts);
+        _mockTransactionRepo.Setup(r => r.GetAllAsync()).ReturnsAsync(new List<Transaction>());
+        _mockGroupRepo.Setup(r => r.GetAllAsync()).ReturnsAsync(groups);
+
+        await _model.OnGetAsync();
+
+        Assert.Equal(2, _model.Groups.Count);
+        Assert.Equal(150m, _model.Groups[0].Total);
+        Assert.Equal(200m, _model.Groups[1].Total);
+    }
+
+    [Fact]
+    public async Task OnGetAsync_EmptyGroup_HasZeroTotal()
+    {
+        var accounts = new List<VirtualAccount>
+        {
+            new() { Id = "1", Name = "Monthly", GroupId = "g2", StartingBalance = 100m }
+        };
+        var groups = new List<AccountGroup>
+        {
+            new() { Id = "g1", Name = "Savings" },
+            new() { Id = "g2", Name = "Monthly" }
+        };
+
+        _mockAccountRepo.Setup(r => r.GetAllAsync()).ReturnsAsync(accounts);
+        _mockTransactionRepo.Setup(r => r.GetAllAsync()).ReturnsAsync(new List<Transaction>());
+        _mockGroupRepo.Setup(r => r.GetAllAsync()).ReturnsAsync(groups);
+
+        await _model.OnGetAsync();
+
+        Assert.Equal(2, _model.Groups.Count);
+        Assert.Equal(0m, _model.Groups[0].Total);
+        Assert.Equal(100m, _model.Groups[1].Total);
     }
 }

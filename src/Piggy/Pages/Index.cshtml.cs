@@ -8,14 +8,17 @@ public class IndexModel : PageModel
 {
     private readonly IVirtualAccountRepository _accountRepo;
     private readonly ITransactionRepository _transactionRepo;
+    private readonly IAccountGroupRepository _groupRepo;
 
-    public IndexModel(IVirtualAccountRepository accountRepo, ITransactionRepository transactionRepo)
+    public IndexModel(IVirtualAccountRepository accountRepo, ITransactionRepository transactionRepo, IAccountGroupRepository groupRepo)
     {
         _accountRepo = accountRepo;
         _transactionRepo = transactionRepo;
+        _groupRepo = groupRepo;
     }
 
     public List<AccountWithBalance> Accounts { get; set; } = new();
+    public List<GroupWithTotal> Groups { get; set; } = new();
     public List<Transaction> RecentTransactions { get; set; } = new();
     public int TotalTransactions { get; set; }
     public int UntaggedCount { get; set; }
@@ -40,6 +43,20 @@ public class IndexModel : PageModel
             });
         }
 
+        var groups = await _groupRepo.GetAllAsync();
+        foreach (var group in groups)
+        {
+            var total = Accounts
+                .Where(a => a.Account.GroupId == group.Id)
+                .Sum(a => a.CurrentBalance);
+
+            Groups.Add(new GroupWithTotal
+            {
+                Group = group,
+                Total = total
+            });
+        }
+
         RecentTransactions = transactions.Take(10).ToList();
         TotalTransactions = transactions.Count;
         UntaggedCount = transactions.Count(t => t.VirtualAccountId == null && t.SplitFrom == null);
@@ -51,5 +68,11 @@ public class IndexModel : PageModel
     {
         public VirtualAccount Account { get; set; } = new();
         public decimal CurrentBalance { get; set; }
+    }
+
+    public class GroupWithTotal
+    {
+        public AccountGroup Group { get; set; } = new();
+        public decimal Total { get; set; }
     }
 }

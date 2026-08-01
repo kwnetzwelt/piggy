@@ -8,10 +8,12 @@ namespace Piggy.Pages.Accounts;
 public class EditModel : PageModel
 {
     private readonly IVirtualAccountRepository _accountRepo;
+    private readonly IAccountGroupRepository _groupRepo;
 
-    public EditModel(IVirtualAccountRepository accountRepo)
+    public EditModel(IVirtualAccountRepository accountRepo, IAccountGroupRepository groupRepo)
     {
         _accountRepo = accountRepo;
+        _groupRepo = groupRepo;
     }
 
     [BindProperty]
@@ -19,6 +21,8 @@ public class EditModel : PageModel
 
     [BindProperty]
     public string? MatchStringsInput { get; set; }
+
+    public List<AccountGroup> Groups { get; set; } = new();
 
     public async Task<IActionResult> OnGetAsync(string id)
     {
@@ -29,12 +33,15 @@ public class EditModel : PageModel
         }
 
         Account = account;
+        Groups = await _groupRepo.GetAllAsync();
         MatchStringsInput = account.MatchStrings != null ? string.Join(", ", account.MatchStrings) : null;
         return Page();
     }
 
     public async Task<IActionResult> OnPostAsync()
     {
+        Groups = await _groupRepo.GetAllAsync();
+
         if (!ModelState.IsValid)
         {
             return Page();

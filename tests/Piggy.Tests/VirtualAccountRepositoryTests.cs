@@ -74,4 +74,32 @@ public class VirtualAccountRepositoryTests
             It.IsAny<FilterDefinition<VirtualAccount>>(),
             It.IsAny<CancellationToken>()), Times.Once);
     }
+
+    [Fact]
+    public async Task CountByGroupAsync_ReturnsCount()
+    {
+        _mockCollection.Setup(c => c.CountDocumentsAsync(
+            It.IsAny<FilterDefinition<VirtualAccount>>(),
+            It.IsAny<CountOptions>(),
+            It.IsAny<CancellationToken>()))
+            .ReturnsAsync(2);
+
+        var count = await _repository.CountByGroupAsync("g1");
+
+        Assert.Equal(2, count);
+    }
+
+    [Fact]
+    public async Task CountByGroupAsync_ReturnsZero_WhenNoAccounts()
+    {
+        _mockCollection.Setup(c => c.CountDocumentsAsync(
+            It.IsAny<FilterDefinition<VirtualAccount>>(),
+            It.IsAny<CountOptions>(),
+            It.IsAny<CancellationToken>()))
+            .ReturnsAsync(0);
+
+        var count = await _repository.CountByGroupAsync("g1");
+
+        Assert.Equal(0, count);
+    }
 }

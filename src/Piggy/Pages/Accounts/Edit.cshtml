@@ -30,6 +30,16 @@
                 <small class="text-muted">Adjust this if your starting balance was incorrect</small>
             </div>
             <div class="mb-3">
+                <label asp-for="Account.GroupId" class="form-label">Group</label>
+                <select asp-for="Account.GroupId" class="form-select">
+                    <option value="">-- No group --</option>
+                    @foreach (var group in Model.Groups)
+                    {
+                        <option value="@group.Id">@group.Name</option>
+                    }
+                </select>
+            </div>
+            <div class="mb-3">
                 <label asp-for="MatchStringsInput" class="form-label">Match Strings</label>
                 <input asp-for="MatchStringsInput" class="form-control" placeholder="e.g., Netbeat, GoDaddy, Namecheap" />
                 <small class="text-muted">Comma-separated keywords. Transactions containing any of these will be suggested for this account.</small>

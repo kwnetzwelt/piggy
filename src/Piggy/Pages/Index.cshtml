@@ -25,6 +25,30 @@
     </div>
 </div>
 
+@if (Model.Groups.Any())
+{
+    <h3 class="mb-3">Groups</h3>
+    <div class="row mb-4">
+        @foreach (var group in Model.Groups)
+        {
+            <div class="col-md-4 mb-3">
+                <div class="card summary-card" style="border-left-color:@(group.Group.Color)">
+                    <div class="card-body">
+                        <h6 class="card-title">
+                            <span class="d-inline-block rounded-circle me-1" style="width:10px;height:10px;background-color:@(group.Group.Color)"></span>
+                            @group.Group.Name
+                        </h6>
+                        <h4 class="@(group.Total >= 0 ? "amount-positive" : "amount-negative")">
+                            @group.Total.ToString("N2") EUR
+                        </h4>
+                        <small class="text-muted">@Model.Accounts.Count(a => a.Account.GroupId == group.Group.Id) account(s)</small>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
 <h3 class="mb-3 d-flex justify-content-between align-items-center">
     Virtual Accounts
     <span class="fs-5 fw-normal @(Model.TotalBalance >= 0 ? "text-success" : "text-danger")">

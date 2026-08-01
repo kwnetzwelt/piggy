@@ -8,10 +8,12 @@ namespace Piggy.Pages.Accounts;
 public class CreateModel : PageModel
 {
     private readonly IVirtualAccountRepository _accountRepo;
+    private readonly IAccountGroupRepository _groupRepo;
 
-    public CreateModel(IVirtualAccountRepository accountRepo)
+    public CreateModel(IVirtualAccountRepository accountRepo, IAccountGroupRepository groupRepo)
     {
         _accountRepo = accountRepo;
+        _groupRepo = groupRepo;
     }
 
     [BindProperty]
@@ -20,12 +22,17 @@ public class CreateModel : PageModel
     [BindProperty]
     public string? MatchStringsInput { get; set; }
 
-    public void OnGet()
+    public List<AccountGroup> Groups { get; set; } = new();
+
+    public async Task OnGetAsync()
     {
+        Groups = await _groupRepo.GetAllAsync();
     }
 
     public async Task<IActionResult> OnPostAsync()
     {
+        Groups = await _groupRepo.GetAllAsync();
+
         if (!ModelState.IsValid)
         {
             return Page();

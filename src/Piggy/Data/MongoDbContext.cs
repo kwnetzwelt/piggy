@@ -28,6 +28,9 @@ public class MongoDbContext : IMongoDbContext
     public IMongoCollection<TOTPSecret> TOTPSecrets =>
         _database.GetCollection<TOTPSecret>("totpSecrets");
 
+    public IMongoCollection<AccountGroup> AccountGroups =>
+        _database.GetCollection<AccountGroup>("accountGroups");
+
     public async Task<string> ExportAsync()
     {
         var virtualAccounts = await VirtualAccounts.Find(new BsonDocument()).ToListAsync();
@@ -35,6 +38,7 @@ public class MongoDbContext : IMongoDbContext
         var splitTemplates = await SplitTemplates.Find(new BsonDocument()).ToListAsync();
         var settings = await Settings.Find(new BsonDocument()).ToListAsync();
         var totpSecrets = await TOTPSecrets.Find(new BsonDocument()).ToListAsync();
+        var accountGroups = await AccountGroups.Find(new BsonDocument()).ToListAsync();
 
         var doc = new BsonDocument
         {
@@ -42,7 +46,8 @@ public class MongoDbContext : IMongoDbContext
             ["transactions"] = new BsonArray(transactions.Select(t => t.ToBsonDocument())),
             ["splitTemplates"] = new BsonArray(splitTemplates.Select(s => s.ToBsonDocument())),
             ["settings"] = new BsonArray(settings.Select(s => s.ToBsonDocument())),
-            ["totpSecrets"] = new BsonArray(totpSecrets.Select(s => s.ToBsonDocument()))
+            ["totpSecrets"] = new BsonArray(totpSecrets.Select(s => s.ToBsonDocument())),
+            ["accountGroups"] = new BsonArray(accountGroups.Select(g => g.ToBsonDocument()))
         };
 
         return doc.ToJson(new MongoDB.Bson.IO.JsonWriterSettings { Indent = true });
@@ -58,7 +63,8 @@ public class MongoDbContext : IMongoDbContext
             ["transactions"] = _database.GetCollection<BsonDocument>("transactions"),
             ["splitTemplates"] = _database.GetCollection<BsonDocument>("splitTemplates"),
             ["settings"] = _database.GetCollection<BsonDocument>("settings"),
-            ["totpSecrets"] = _database.GetCollection<BsonDocument>("totpSecrets")
+            ["totpSecrets"] = _database.GetCollection<BsonDocument>("totpSecrets"),
+            ["accountGroups"] = _database.GetCollection<BsonDocument>("accountGroups")
         };
 
         foreach (var (key, collection) in collections)

@@ -39,4 +39,9 @@ public class VirtualAccountRepository : IVirtualAccountRepository
     {
         await _context.VirtualAccounts.DeleteOneAsync(a => a.Id == id);
     }
+
+    public async Task<long> CountByGroupAsync(string groupId)
+    {
+        return await _context.VirtualAccounts.CountDocumentsAsync(a => a.GroupId == groupId);
+    }
 }

@@ -11,6 +11,7 @@ public interface IMongoDbContext
     IMongoCollection<SplitTemplate> SplitTemplates { get; }
     IMongoCollection<Settings> Settings { get; }
     IMongoCollection<TOTPSecret> TOTPSecrets { get; }
+    IMongoCollection<AccountGroup> AccountGroups { get; }
     Task<string> ExportAsync();
     Task ImportAsync(string json);
 }
