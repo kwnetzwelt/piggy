@@ -29,14 +29,13 @@
                     <li class="nav-item">
                         <a class="nav-link" asp-page="/Transactions/Index">Transactions</a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" asp-page="/Import/Index">Import</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" asp-page="/Groups/Index">Groups</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" asp-page="/Settings/Index">Settings</a>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">More</a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" asp-page="/Import/Index">Import</a></li>
+                            <li><a class="dropdown-item" asp-page="/Groups/Index">Groups</a></li>
+                            <li><a class="dropdown-item" asp-page="/Settings/Index">Settings</a></li>
+                        </ul>
                     </li>
                 </ul>
                 <ul class="navbar-nav ms-auto">
