@@ -58,7 +58,7 @@ public class IndexModel : PageModel
             .ToList();
 
         if (Filter == "untagged")
-            allTransactions = allTransactions.Where(t => t.VirtualAccountId == null).ToList();
+            allTransactions = allTransactions.Where(t => t.VirtualAccountId == null && t.SplitFrom == null).ToList();
         else if (Filter == "tagged")
             allTransactions = allTransactions.Where(t => t.VirtualAccountId != null).ToList();
 

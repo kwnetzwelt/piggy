@@ -42,7 +42,7 @@ public class IndexModel : PageModel
 
         RecentTransactions = transactions.Take(10).ToList();
         TotalTransactions = transactions.Count;
-        UntaggedCount = transactions.Count(t => t.VirtualAccountId == null);
+        UntaggedCount = transactions.Count(t => t.VirtualAccountId == null && t.SplitFrom == null);
         TotalBalance = Accounts.Sum(a => a.CurrentBalance);
         NegativeBalance = Accounts.Where(a => a.CurrentBalance < 0).Sum(a => a.CurrentBalance);
     }

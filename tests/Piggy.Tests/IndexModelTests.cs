@@ -114,6 +114,24 @@ public class IndexModelTests
     }
 
     [Fact]
+    public async Task OnGetAsync_UntaggedCount_ExcludesSplitTransactions()
+    {
+        _mockAccountRepo.Setup(r => r.GetAllAsync()).ReturnsAsync(new List<VirtualAccount>());
+        var transactions = new List<Transaction>
+        {
+            new() { Id = "t1", VirtualAccountId = "1", Amount = -10m, Date = DateTime.Now, Description = "Tagged" },
+            new() { Id = "t2", VirtualAccountId = null, Amount = -20m, Date = DateTime.Now, Description = "Untagged" },
+            new() { Id = "t3", VirtualAccountId = null, SplitFrom = "t3", Amount = -30m, Date = DateTime.Now, Description = "Split" }
+        };
+
+        _mockTransactionRepo.Setup(r => r.GetAllAsync()).ReturnsAsync(transactions);
+
+        await _model.OnGetAsync();
+
+        Assert.Equal(1, _model.UntaggedCount);
+    }
+
+    [Fact]
     public async Task OnGetAsync_ReturnsEmptyCollections_WhenNoData()
     {
         _mockAccountRepo.Setup(r => r.GetAllAsync()).ReturnsAsync(new List<VirtualAccount>());
