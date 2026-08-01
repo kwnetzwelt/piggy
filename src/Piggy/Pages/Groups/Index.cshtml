@@ -1,0 +1,59 @@
+@page
+@model Piggy.Pages.Groups.IndexModel
+@{
+    ViewData["Title"] = "Groups";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Groups</h2>
+    <a asp-page="Create" class="btn btn-primary">
+        <i class="bi bi-plus"></i> New Group
+    </a>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.ErrorMessage))
+{
+    <div class="alert alert-danger">@Model.ErrorMessage</div>
+}
+
+@if (!Model.Groups.Any())
+{
+    <div class="alert alert-info">
+        No groups yet. Create your first one to start grouping virtual accounts!
+    </div>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Accounts</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.Groups)
+            {
+                <tr>
+                    <td>
+                        <span class="d-inline-block rounded-circle me-2" style="width:12px;height:12px;background-color:@(item.Group.Color)"></span>
+                        <strong>@item.Group.Name</strong>
+                    </td>
+                    <td>@item.AccountCount</td>
+                    <td>
+                        <a asp-page="Edit" asp-route-id="@item.Group.Id" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <form method="post" asp-page-handler="Delete" class="d-inline">
+                            <input type="hidden" name="id" value="@item.Group.Id" />
+                            <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this group?')">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
