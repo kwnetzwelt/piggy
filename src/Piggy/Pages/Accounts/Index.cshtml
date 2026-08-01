@@ -23,6 +23,7 @@ else
         <thead>
             <tr>
                 <th>Name</th>
+                <th>Group</th>
                 <th>Starting Balance</th>
                 <th>Current Balance</th>
                 <th>Actions</th>
@@ -35,6 +36,12 @@ else
                     <td>
                         <span class="d-inline-block rounded-circle me-2" style="width:12px;height:12px;background-color:@(item.Account.Color)"></span>
                         <strong>@item.Account.Name</strong>
+                    </td>
+                    <td>
+                        @if (item.Account.GroupId != null && Model.GroupNames.TryGetValue(item.Account.GroupId, out var groupName))
+                        {
+                            <span class="badge bg-secondary">@groupName</span>
+                        }
                     </td>
                     <td>@item.Account.StartingBalance.ToString("N2") EUR</td>
                     <td class="@(item.CurrentBalance >= 0 ? "amount-positive" : "amount-negative")">

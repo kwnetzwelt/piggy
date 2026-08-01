@@ -9,14 +9,17 @@ public class IndexModel : PageModel
 {
     private readonly IVirtualAccountRepository _accountRepo;
     private readonly ITransactionRepository _transactionRepo;
+    private readonly IAccountGroupRepository _groupRepo;
 
-    public IndexModel(IVirtualAccountRepository accountRepo, ITransactionRepository transactionRepo)
+    public IndexModel(IVirtualAccountRepository accountRepo, ITransactionRepository transactionRepo, IAccountGroupRepository groupRepo)
     {
         _accountRepo = accountRepo;
         _transactionRepo = transactionRepo;
+        _groupRepo = groupRepo;
     }
 
     public List<AccountWithBalance> Accounts { get; set; } = new();
+    public Dictionary<string, string> GroupNames { get; set; } = new();
 
     public async Task OnGetAsync()
     {
@@ -35,6 +38,8 @@ public class IndexModel : PageModel
                 CurrentBalance = account.StartingBalance + (decimal)balance
             });
         }
+
+        GroupNames = (await _groupRepo.GetAllAsync()).ToDictionary(g => g.Id, g => g.Name);
     }
 
     public async Task<IActionResult> OnPostDeleteAsync(string id)
