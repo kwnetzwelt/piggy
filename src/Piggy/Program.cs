@@ -72,6 +72,7 @@ builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
 builder.Services.AddScoped<ISplitTemplateRepository, SplitTemplateRepository>();
 builder.Services.AddScoped<ISettingsRepository, SettingsRepository>();
 builder.Services.AddScoped<ITOTPSecretRepository, TOTPSecretRepository>();
+builder.Services.AddScoped<IAccountGroupRepository, AccountGroupRepository>();
 
 var app = builder.Build();
 
