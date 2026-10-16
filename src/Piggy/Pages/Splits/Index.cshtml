@@ -92,7 +92,7 @@ else
                                             }
                                         </td>
                                         <td class="text-end @(item.Amount >= 0 ? "amount-positive" : "amount-negative")">
-                                            @item.Amount.ToString("N2") EUR
+                                            @Money.Text(item.Amount)
                                         </td>
                                     </tr>
                                 }
@@ -101,7 +101,7 @@ else
                                 <tr class="table-active">
                                     <td><strong>Total</strong></td>
                                     <td class="text-end fw-bold">
-                                        @template.Items.Sum(i => i.Amount).ToString("N2") EUR
+                                        @Money.Text(template.Items.Sum(i => i.Amount))
                                     </td>
                                 </tr>
                             </tfoot>

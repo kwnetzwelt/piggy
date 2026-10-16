@@ -39,7 +39,7 @@
                             @group.Group.Name
                         </h6>
                         <h4 class="@(group.Total >= 0 ? "amount-positive" : "amount-negative")">
-                            @group.Total.ToString("N2") EUR
+                            @Money.Text(group.Total)
                         </h4>
                         <small class="text-muted">@Model.Accounts.Count(a => a.Account.GroupId == group.Group.Id) account(s)</small>
                     </div>
@@ -52,10 +52,10 @@
 <h3 class="mb-3 d-flex justify-content-between align-items-center">
     Virtual Accounts
     <span class="fs-5 fw-normal @(Model.TotalBalance >= 0 ? "text-success" : "text-danger")">
-        @Model.TotalBalance.ToString("N2") EUR
+        @Money.Text(Model.TotalBalance)
         @if (Model.NegativeBalance < 0)
         {
-            <span class="text-danger ms-2">(@Model.NegativeBalance.ToString("N2") EUR)</span>
+            <span class="text-danger ms-2">(@Money.Text(Model.NegativeBalance))</span>
         }
     </span>
 </h3>
@@ -78,9 +78,9 @@
                         @item.Account.Name
                     </h6>
                     <h4 class="@(item.CurrentBalance >= 0 ? "amount-positive" : "amount-negative")">
-                        @item.CurrentBalance.ToString("N2") EUR
+                        @Money.Text(item.CurrentBalance)
                     </h4>
-                    <small class="text-muted">Starting: @item.Account.StartingBalance.ToString("N2") EUR</small>
+                    <small class="text-muted">Starting: @Money.Text(item.Account.StartingBalance)</small>
                 </div>
             </div>
         </div>
@@ -112,7 +112,7 @@ else
                     <td>@tx.Date.ToString("d")</td>
                     <td>@tx.Description</td>
                     <td class="@(tx.Amount >= 0 ? "amount-positive" : "amount-negative")">
-                        @tx.Amount.ToString("N2") EUR
+                        @Money.Text(tx.Amount)
                     </td>
                     <td>@(tx.SpaceName ?? "Main")</td>
                 </tr>

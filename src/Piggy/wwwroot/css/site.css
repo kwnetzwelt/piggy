@@ -45,3 +45,21 @@ input[type="file"]::file-selector-button {
 input[type="file"]::file-selector-button:hover {
     background-color: #5a6268;
 }
+
+/* Toggle to hide euro amounts (e.g. for screenshots) */
+.icon-amounts-hidden {
+    display: none;
+}
+
+html.hide-amounts .money {
+    filter: blur(6px);
+    user-select: none;
+}
+
+html.hide-amounts .icon-amounts-visible {
+    display: none;
+}
+
+html.hide-amounts .icon-amounts-hidden {
+    display: inline-block;
+}

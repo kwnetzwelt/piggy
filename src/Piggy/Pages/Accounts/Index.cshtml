@@ -43,9 +43,9 @@ else
                             <span class="badge bg-secondary">@groupName</span>
                         }
                     </td>
-                    <td>@item.Account.StartingBalance.ToString("N2") EUR</td>
+                    <td>@Money.Text(item.Account.StartingBalance)</td>
                     <td class="@(item.CurrentBalance >= 0 ? "amount-positive" : "amount-negative")">
-                        @item.CurrentBalance.ToString("N2") EUR
+                        @Money.Text(item.CurrentBalance)
                     </td>
                     <td>
                         <a asp-page="Edit" asp-route-id="@item.Account.Id" class="btn btn-sm btn-outline-primary">

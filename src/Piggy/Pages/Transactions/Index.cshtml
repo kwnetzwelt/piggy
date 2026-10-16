@@ -92,7 +92,7 @@ else
                             }
                         </td>
                         <td class="text-nowrap text-end @(tx.Amount >= 0 ? "amount-positive" : "amount-negative")">
-                            @tx.Amount.ToString("N2") EUR
+                            @Money.Text(tx.Amount)
                         </td>
                         <td style="@(account != null && !isSplit ? $"background-color: {account.Color}10" : "")">
                             @if (isSplit && !isChild)
